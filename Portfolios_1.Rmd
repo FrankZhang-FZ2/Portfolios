@@ -1,0 +1,70 @@
+---
+title: "Strangers_drowning_Textanalysis"
+author: "Qilin Zhang"
+date: "2023-01-24"
+output: html_document
+---
+
+citation
+https://www.r-bloggers.com/2021/02/text-analysis-with-r/
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+txt <- read.delim("stranger drowning.txt", header = FALSE)
+```
+
+```{r packs, message=FALSE}
+library(tidytext)
+library(tidyverse)
+library(textdata)
+```
+
+###text_analyses
+
+```{r analyses}
+txt_tidy <- txt %>%
+  unnest_tokens("Word", "V1") %>%
+  mutate(Word = str_replace(Word, "'s", ""))%>%
+  anti_join(stop_words, by = c("Word" = "word"))
+
+txt_tidy_S <- txt %>%
+  unnest_tokens("Word", "V1") %>%
+  mutate(Word = str_replace(Word, "'s", ""))%>%
+  anti_join(stop_words, by = c("Word" = "word")) %>%
+  inner_join(get_sentiments("nrc"), by = c("Word" = "word"))
+
+word_frequency <- function(x, top = 10){
+  
+  x %>%
+    
+# generate the word count
+  count(Word, sort = TRUE) %>%
+  
+# We want to create a factor from the word column with the levels showing the most frequent words as top level
+# This is just for aestethic reasons, however, it helps make the point
+  mutate(Word = factor(Word, levels = rev(unique(Word)))) %>% 
+# We use the "top" variable defined in the function so we can decide how many words we want to use 
+  top_n(top) %>%
+    
+# This will be useful later if we want to use a grouping variable and will do nothing if we don't  
+  ungroup() %>%
+  
+# The graph itself
+  ggplot(mapping = aes(x = Word, y = n)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(x = NULL)
+}
+
+txt_tidy %>%
+word_frequency(30)
+
+txt_tidy_S %>%
+  count(sentiment, sort = TRUE) %>%
+  ggplot(mapping = aes(x = sentiment, y = n)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(x = NULL)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
