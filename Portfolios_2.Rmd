@@ -1,0 +1,49 @@
+---
+title: "Strangers_drowning_Textanalysis"
+author: "Qilin Zhang"
+date: "2023-02-03"
+output: html_document
+---
+
+citation
+https://www.r-bloggers.com/2021/02/text-analysis-with-r/
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+txt <- read.delim("stranger drowning.txt", header = FALSE)
+```
+
+```{r packs, message=FALSE}
+library(tidytext)
+library(tidyverse)
+library(textdata)
+library(wordcloud)
+```
+
+###text_analyses
+
+```{r analyses}
+txt_tidy <- txt %>%
+  unnest_tokens("Word", "V1") %>%
+  mutate(Word = str_replace(Word, "'s", ""))%>%
+  anti_join(stop_words, by = c("Word" = "word"))
+
+txt_tidy_S <- txt %>%
+  unnest_tokens("Word", "V1") %>%
+  mutate(Word = str_replace(Word, "'s", ""))%>%
+  anti_join(stop_words, by = c("Word" = "word")) %>%
+  inner_join(get_sentiments("nrc"), by = c("Word" = "word"))
+```
+
+###wordcloud generation
+
+```{r Wordcloud}
+txt_tidy %>%
+  count(Word) %>%
+  with(wordcloud(Word, n, max.words = 100))
+
+txt_tidy_S %>%
+  count(sentiment)%>%
+  with(wordcloud(sentiment, n, max.words = 20))
+```
+
